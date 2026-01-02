@@ -1,0 +1,19 @@
+syntax = "proto3";
+package lobby;
+
+// [수정] 모듈명(game-lobby) + 저장될 폴더명(pb)
+option go_package = "go-learn/pb";
+
+service LobbyService {
+  rpc JoinMatch(JoinRequest) returns (stream JoinResponse) {}
+}
+
+message JoinRequest {
+  string user_id = 1;
+}
+
+message JoinResponse {
+  string status = 1;
+  string game_server_ip = 2;
+  int32 game_server_port = 3;
+}

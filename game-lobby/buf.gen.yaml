@@ -1,0 +1,18 @@
+version: v1
+managed:
+  enabled: true # go_package 옵션 등을 buf가 관리하도록 허용 (편리함)
+  go_package_prefix:
+    default: go-learn/pb # 결과물이 생성될 패키지 경로 prefix
+    except:
+      - buf.build/googleapis/googleapis
+
+plugins:
+  # 1. 일반 메시지용 (protoc-gen-go 대체)
+  - plugin: buf.build/protocolbuffers/go
+    out: pb
+    opt: paths=source_relative
+
+  # 2. gRPC 서비스용 (protoc-gen-go-grpc 대체)
+  - plugin: buf.build/grpc/go
+    out: pb
+    opt: paths=source_relative

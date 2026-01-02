@@ -1,0 +1,17 @@
+apiVersion: "agones.dev/v1"
+kind: Fleet
+metadata:
+  name: simple-udp-fleet
+spec:
+  replicas: 2  # "항상 빈 서버 2대를 유지해라!"
+  template:
+    spec:
+      ports:
+        - name: default
+          containerPort: 7654
+      template:
+        spec:
+          containers:
+            - name: simple-game-server
+              image: simple-game-server:0.1
+              imagePullPolicy: Never
