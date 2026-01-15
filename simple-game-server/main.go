@@ -51,6 +51,7 @@ func main() {
 		conn.WriteTo([]byte("Server: "+msg), addr)
 
 		if msg == "shutdown" {
+			time.Sleep(5 * time.Second)
 			log.Println("Shutdown 명령어 수신, 서버 종료 중...")
 			break
 		}

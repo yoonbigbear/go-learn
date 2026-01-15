@@ -15,7 +15,7 @@ docker build -t game-mmf:0.1 ./game-mmf
 docker build -t simple-game-server:0.1 ./simple-game-server
 
 kubectl apply -f simple-game-server/fleet.yaml
-
+kubectl apply -f simple-game-server/fleet-autoscaler.yaml
 kubectl apply -f . --recursive
 
 kubectl delete pod -l app=game-lobby

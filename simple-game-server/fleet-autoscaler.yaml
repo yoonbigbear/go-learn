@@ -1,0 +1,16 @@
+apiVersion: autoscaling.agones.dev/v1
+kind: FleetAutoscaler
+metadata:
+  name: simple-udp-fleet-autoscaler
+spec:
+  fleetName: simple-udp-fleet
+  policy:
+    type: Buffer
+    buffer:
+      bufferSize: 1
+      minReplicas: 1
+      maxReplicas: 10
+    sync:
+      type: FixedInterval
+      fixedInterval:
+        seconds: 1

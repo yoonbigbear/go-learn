@@ -3,7 +3,7 @@ kind: Fleet
 metadata:
   name: simple-udp-fleet
 spec:
-  replicas: 2
+  replicas: 0
   template:
     metadata:
       annotations:
