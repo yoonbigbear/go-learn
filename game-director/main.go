@@ -70,17 +70,24 @@ func main() {
 			// 4. 게임 서버 할당 (Agones)
 			serverIP, err := allocateGameServer()
 			if err != nil {
-				log.Printf("게임 서버 할당 실패: %v", err)
+				log.Printf("Aggones로부터 게임 서버 할당 실패: %v", err)
 				continue // 서버가 없으면 매칭을 버림.
 			}
 
 			// 5. 티켓 할당 (AssignTickets 호출)
 			var assignments []*om.AssignmentGroup
-			assignments = append(assignments, &om.AssignmentGroup{TicketIds: getTicketIds(match.Tickets), Assignment: &om.Assignment{Connection: serverIP}})
+			assignments = append(assignments,
+				&om.AssignmentGroup{
+					TicketIds: getTicketIds(match.Tickets),
+					Assignment: &om.Assignment{
+						Connection: serverIP,
+					},
+				})
 			assignReq := &om.AssignTicketsRequest{
 				Assignments: assignments,
 			}
 
+			// Ticket과 ServerIP 정보를 OpenMatch에 기록
 			_, err = omClient.AssignTickets(context.Background(), assignReq)
 			if err != nil {
 				log.Printf("티켓 할당 실패: %v", err)

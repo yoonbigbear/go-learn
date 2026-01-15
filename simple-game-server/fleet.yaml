@@ -3,15 +3,20 @@ kind: Fleet
 metadata:
   name: simple-udp-fleet
 spec:
-  replicas: 2  # "항상 빈 서버 2대를 유지해라!"
+  replicas: 2
   template:
+    metadata:
+      annotations:
+        agones.dev/gameserver: simple-game-server
     spec:
       ports:
-        - name: default
-          containerPort: 7654
+      - name: default
+        portPolicy: Dynamic
+        containerPort: 7654
+        protocol: UDP
       template:
         spec:
           containers:
-            - name: simple-game-server
-              image: simple-game-server:0.1
-              imagePullPolicy: Never
+          - name: simple-game-server
+            image: simple-game-server:0.1
+            imagePullPolicy: Never
