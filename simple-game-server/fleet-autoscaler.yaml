@@ -10,7 +10,3 @@ spec:
       bufferSize: 1
       minReplicas: 1
       maxReplicas: 10
-    sync:
-      type: FixedInterval
-      fixedInterval:
-        seconds: 1
