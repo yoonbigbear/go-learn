@@ -20,6 +20,7 @@ helm repo update
 helm upgrade --install prometheus prometheus-community/kube-prometheus-stack ^
   --namespace monitoring ^
   --create-namespace ^
+  --set grafana.adminPassword="admin" ^
   --set prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues=false ^
   --set grafana.service.type=LoadBalancer ^
   --set grafana.service.port=3000 ^
@@ -35,14 +36,23 @@ helm upgrade --install jaeger jaegertracing/jaeger ^
     --set collector.enabled=false ^
     --set query.enabled=false ^
     --wait
-kubectl patch svc jaeger -n monitoring -p "{\"spec\": {\"type\": \"LoadBalancer\"}}"
+
+
+helm upgrade --install loki grafana/loki-stack ^
+  --namespace monitoring ^
+  --set grafana.enabled=false ^
+  --set promtail.enabled=true ^
+  --set loki.commonConfig.replication_factor=1 ^
+  --set loki.storage.type=filesystem ^
+  --wait
 
 
 helm upgrade --install agones agones/agones ^
     --namespace agones-system ^
     --create-namespace ^
     --set gameservers.minPort=7000,gameservers.maxPort=7100 ^
-    --set agones.metrics.prometheus.enabled=true ^    
+    --set agones.metrics.prometheus.enabled=true ^
+    --set agones.metrics.prometheus.serviceMonitor.enabled=true ^
     --set agones.controller.autoscaler.syncPeriod=3s ^
     --wait
 
@@ -53,7 +63,7 @@ helm upgrade --install open-match --create-namespace --namespace open-match open
     --set redis.metrics.enabled=true ^
     --set global.telemetry.prometheus.enabled=true ^
     --set global.telemetry.jaeger.enabled=true ^
-    --set global.telemetry.jaeger.collectorEndpoint="http://jaeger-collector.monitoring.svc.cluster.local:14268/api/traces" ^
+    --set global.telemetry.jaeger.collectorEndpoint="jaeger-collector.monitoring.svc.cluster.local:4317" ^
     --set redis.image.tag=latest ^
     --set redis.metrics.image.tag=latest ^
     --wait

@@ -9,10 +9,12 @@ IF %ERRORLEVEL% NEQ 0 (
     exit /b
 )
 
-docker build -t game-lobby:0.1 ./game-lobby
-docker build -t game-director:0.1 ./game-director
-docker build -t game-mmf:0.1 ./game-mmf
-docker build -t simple-game-server:0.1 ./simple-game-server
+docker build -t game-dashboard-backend:0.1 -f ./game-dashboard/backend/Dockerfile .
+docker build -t game-dashboard-frontend:0.1 -f ./game-dashboard/frontend/Dockerfile .
+docker build -t game-lobby:0.1 -f ./game-lobby/Dockerfile .
+docker build -t game-director:0.1 -f ./game-director/Dockerfile .
+docker build -t game-mmf:0.1 -f ./game-mmf/Dockerfile .
+docker build -t simple-game-server:0.1 -f ./simple-game-server/Dockerfile .
 
 kubectl apply -f simple-game-server/fleet.yaml
 kubectl apply -f simple-game-server/fleet-autoscaler.yaml

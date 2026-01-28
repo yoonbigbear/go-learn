@@ -3,10 +3,14 @@ package main
 import (
 	"context"
 	"fmt"
-	"game-lobby/pb" // go.mod에 적인 모듈 이름을 기준으로 시작해야 함
+	"go-learn/game-lobby/pb" // go.mod에 적인 모듈 이름을 기준으로 시작해야 함
 	"io"
 	"log"
 	"net"
+
+	"go-learn/pkg/telemetry"
+	"log/slog"
+	"os"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -77,6 +81,14 @@ func (s *lobbyServer) JoinMatch(req *pb.JoinRequest, stream pb.LobbyService_Join
 }
 
 func main() {
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	slog.SetDefault(logger)
+	jaegerAddr := os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
+	if jaegerAddr == "" {
+		jaegerAddr = "jaeger.monitoring.svc.cluster.local:4317"
+	}
+	shutdown := telemetry.InitTracer("lobby-server", jaegerAddr)
+	defer shutdown(context.Background())
 
 	// 쿠버네티스 내부 주소를 사용해서 Open Match 프런트엔드에 연결
 	omAddr := "open-match-frontend.open-match.svc.cluster.local:50504"

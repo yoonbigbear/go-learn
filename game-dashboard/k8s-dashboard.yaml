@@ -1,0 +1,67 @@
+# --- Backend ---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dashboard-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dashboard-backend
+  template:
+    metadata:
+      labels:
+        app: dashboard-backend
+    spec:
+      containers:
+      - name: backend
+        image: game-dashboard-backend:0.1
+        imagePullPolicy: Never  # 로컬 이미지를 쓰기 위해 필수!
+        ports:
+        - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dashboard-backend # Nginx 설정의 주소와 같아야 함
+spec:
+  selector:
+    app: dashboard-backend
+  ports:
+  - port: 8080
+    targetPort: 8080
+
+---
+# --- Frontend ---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dashboard-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dashboard-frontend
+  template:
+    metadata:
+      labels:
+        app: dashboard-frontend
+    spec:
+      containers:
+      - name: frontend
+        image: game-dashboard-frontend:0.1
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dashboard-frontend
+spec:
+  type: LoadBalancer # 외부에서 접속하기 위해
+  selector:
+    app: dashboard-frontend
+  ports:
+  - port: 5173
+    targetPort: 80

@@ -2,7 +2,7 @@
 FROM golang:1.25 as builder
 WORKDIR /app
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -o game-server .
+RUN CGO_ENABLED=0 GOOS=linux go build -o game-server ./simple-game-server
 
 # 실행 단계 (가벼운 Alpine 리눅스 사용)
 FROM alpine:3.14

@@ -5,8 +5,11 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"log/slog"
 	"time"
 
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
@@ -28,6 +31,13 @@ func main() {
 	log.Println("Director 시작: 매칭 감시 중")
 
 	for {
+		ctx := context.Background()
+		tracer := otel.Tracer("director-service")
+
+		// 새로운 주기(Cycle)마다 Span 생성
+		ctx, span := tracer.Start(ctx, "FetchMatches")
+		defer span.End()
+
 		// 2. FetchMatches 요청 (매칭 만들어와!)
 		req := &om.FetchMatchesRequest{
 			Config: &om.FunctionConfig{
@@ -54,7 +64,6 @@ func main() {
 		for {
 			resp, err := stream.Recv()
 			if err == io.EOF {
-				log.Println("모든 매칭 처리 완료")
 				break
 			}
 			if err != nil {
@@ -66,6 +75,14 @@ func main() {
 			matchId := match.GetMatchId()
 			playerCount := len(match.Tickets)
 			log.Printf("매칭 완료: 매치 ID %s, 플레이어 수 %d", matchId, playerCount)
+
+			tracer := otel.Tracer("director-service")
+			// 상위 Span(FetchMatches)의 자식 Span 생성
+			ctx, span := tracer.Start(ctx, "AllocateGameServer")
+			defer span.End()
+			// Span에 태그 추가 (검색 용이)
+			span.SetAttributes(attribute.String("match_id", matchId))
+			slog.InfoContext(ctx, "Agones 게임 서버 할당 시도", "match_id", matchId)
 
 			// 4. 게임 서버 할당 (Agones)
 			serverIP, err := allocateGameServer()

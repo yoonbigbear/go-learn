@@ -4,8 +4,11 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"log/slog"
 	"net"
 
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
+	"go.opentelemetry.io/otel"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	om "open-match.dev/open-match/pkg/pb"
@@ -18,8 +21,15 @@ type matchFunctionService struct {
 
 // Director로부터 매칭 요청을 받으면 호출되는 함수
 func (s *matchFunctionService) Run(req *om.RunRequest, stream om.MatchFunction_RunServer) error {
-	log.Printf("매칭 요청 받음 (프로필: %s)", req.Profile.Name)
+	ctx := stream.Context()
+	tracer := otel.Tracer("mmf-service")
 
+	ctx, span := tracer.Start(ctx, "RunMatchFunction")
+	defer span.End()
+
+	slog.InfoContext(ctx, "매치 메이킹 로직 실행", "profile_name", req.Profile.Name)
+
+	log.Printf("매칭 요청 받음 (프로필: %s)", req.Profile.Name)
 	// QueryService에서 티켓 가져오기
 	// Director가 보내준 Pool("all-users") 정보를 그대로 사용해서 조회한다.
 	pool := req.Profile.Pools[0]
@@ -78,7 +88,10 @@ func main() {
 		log.Fatalf("리스너 생성 실패: %v", err)
 	}
 
-	s := grpc.NewServer()
+	s := grpc.NewServer(
+		// 서버용 인터셉터로 들어오는 요청의 TraceID를 받는다.
+		grpc.StatsHandler(otelgrpc.NewServerHandler()),
+	)
 	om.RegisterMatchFunctionServer(s, &matchFunctionService{queryClient: om.NewQueryServiceClient(conn)})
 
 	if err := s.Serve(lis); err != nil {
