@@ -6,7 +6,7 @@ ECHO ========================================================
 minikube status >nul 2>&1
 IF %ERRORLEVEL% NEQ 0 (
     ECHO Minikube is not running. Starting Minikube...
-    minikube start --cpus=4 --memory=8192 --ports 7000-7100:7000-7100/udp
+    minikube start --cpus=6 --memory=12288 --ports 7000-7100:7000-7100/udp
 ) ELSE (
     ECHO Minikube is already running.
 )
@@ -20,6 +20,7 @@ helm repo update
 helm upgrade --install prometheus prometheus-community/kube-prometheus-stack ^
   --namespace monitoring ^
   --create-namespace ^
+  -f value-monitoring.yaml ^
   --set grafana.adminPassword="admin" ^
   --set prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues=false ^
   --set grafana.service.type=LoadBalancer ^
@@ -67,9 +68,6 @@ helm upgrade --install open-match --create-namespace --namespace open-match open
     --set redis.image.tag=latest ^
     --set redis.metrics.image.tag=latest ^
     --wait
-
-kubectl get secret --namespace monitoring prometheus-grafana -o jsonpath="{.data.admin-password}" | ForEach-Object { [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($_)) }
-
 ECHO.
 ECHO ========================================================
 ECHO Setup Complete!

@@ -1,0 +1,39 @@
+grafana:
+  # Grafana가 시작될 때 자동으로 추가할 데이터 소스들
+  additionalDataSources:
+    - name: Loki
+      type: loki
+      uid: loki-uid          # 고유 ID (대시보드랑 연결할 때 씀)
+      url: http://loki.monitoring:3100
+      access: proxy
+      isDefault: false
+
+    - name: Jaeger
+      type: jaeger
+      uid: jaeger-uid
+      url: http://jaeger.monitoring:16686
+      access: proxy
+      isDefault: false
+      jsonData:
+        traceIdFrom: "loki-uid" # Loki 로그에서 Trace ID 클릭 시 이 데이터소스 사용
+
+  dashboardProviders:
+    dashboardproviders.yaml:
+      apiVersion: 1
+      providers:
+      - name: 'default'
+        orgId: 1
+        folder: ''
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards/default
+
+  dashboards:
+    default:
+      # ID 315번: Kubernetes Cluster Monitoring
+      k8s-views:
+        gnetId: 315
+        revision: 3
+        datasource: Prometheus

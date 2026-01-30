@@ -1,0 +1,41 @@
+
+helm repo add agones https://agones.dev/chart/stable >nul 2>&1
+helm repo add open-match https://open-match.dev/chart/stable >nul 2>&1
+
+helm upgrade --install agones agones/agones ^
+    --namespace agones-system ^
+    --create-namespace ^
+    --set gameservers.minPort=7000,gameservers.maxPort=7100 ^
+    --set agones.controller.autoscaler.syncPeriod=3s
+
+helm upgrade --install open-match --create-namespace --namespace open-match open-match/open-match ^
+    --set open-match-customize.enabled=true ^
+    --set open-match-customize.evaluator.enabled=true ^
+    --set open-match-override.enabled=true
+
+FOR /f "tokens=*" %%i IN ('minikube docker-env --shell cmd') DO %%i
+
+docker image ls >nul 2>&1
+IF %ERRORLEVEL% NEQ 0 (
+    echo ? Error: Cannot connect to Docker inside Minikube.
+    pause
+    exit /b
+)
+
+docker build -t game-dashboard-backend:0.1 -f ./game-dashboard/backend/Dockerfile .
+docker build -t game-dashboard-frontend:0.1 -f ./game-dashboard/frontend/Dockerfile .
+docker build -t game-lobby:0.1 -f ./game-lobby/Dockerfile .
+docker build -t game-director:0.1 -f ./game-director/Dockerfile .
+docker build -t game-mmf:0.1 -f ./game-mmf/Dockerfile .
+docker build -t simple-game-server:0.1 -f ./simple-game-server/Dockerfile .
+
+kubectl apply -f simple-game-server/fleet.yaml
+kubectl apply -f simple-game-server/fleet-autoscaler.yaml
+kubectl apply -f . --recursive
+
+kubectl delete pod -l app=game-lobby
+kubectl delete pod -l app=game-director
+kubectl delete pod -l app=my-mmf
+
+kubectl get fleet
+pause
